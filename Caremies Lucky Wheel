@@ -1,1 +1,138 @@
+class GameFragment : Fragment(R.layout.fragment_game) {
 
+
+    lateinit var mediaPlayer: MediaPlayer
+
+    private var random: Int = 0
+    private val TAG: String = "GameFragment"
+    private var _binding: FragmentGameBinding? = null
+    private val binding get() = _binding!!
+
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        _binding = FragmentGameBinding.bind(view)
+
+        val wheelItems: MutableList<WheelItem> = ArrayList()
+
+        wheelItems.add(
+            WheelItem(
+                Color.LTGRAY,
+                BitmapFactory.decodeResource(resources, R.drawable.slot1),
+                "F r e e   C h a r g e"
+            )
+        )
+
+        wheelItems.add(
+            WheelItem(
+                Color.GRAY,
+                BitmapFactory.decodeResource(resources, R.drawable.slot3),
+                "T r e e   B u r n"
+            )
+        )
+
+        wheelItems.add(
+            WheelItem(
+                Color.LTGRAY,
+                BitmapFactory.decodeResource(resources, R.drawable.slot2),
+                "T r e e   E a r n"
+            )
+        )
+
+
+        wheelItems.add(
+            WheelItem(
+                Color.GRAY,
+                BitmapFactory.decodeResource(resources, R.drawable.slot4),
+                "T r e e   B u r n"
+            )
+        )
+
+        wheelItems.add(
+            WheelItem(
+                Color.LTGRAY,
+                BitmapFactory.decodeResource(resources, R.drawable.slot5),
+                "T r e e   E a r n"
+            )
+        )
+
+        wheelItems.add(
+            WheelItem(
+                Color.GRAY,
+                BitmapFactory.decodeResource(resources, R.drawable.ic_retry_sm),
+                "R E T R Y"
+            )
+        )
+
+        binding.luckyWheel.addWheelItems(wheelItems)
+//        binding.luckyWheel.setTarget(2)
+
+        binding.luckyWheel.setLuckyWheelReachTheTarget {
+
+            try {
+
+                if (random == 1 || random == 3 || random == 5) {
+                    binding.konfettiView.start(Presets.parade())
+
+                    val mSharedPreferences = requireContext().getSharedPreferences(
+                        requireContext().packageName,
+                        AppCompatActivity.MODE_PRIVATE
+                    )
+                    var creditsHistory = mSharedPreferences.getInt(Constant.credits, 0)
+                    mSharedPreferences.apply {
+                        var editor = this.edit()
+
+
+                        creditsHistory += 1
+
+                        editor.putInt(Constant.credits, creditsHistory).apply()
+                    }
+                }
+
+                binding.btnRotate.isEnabled = true
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+
+        }
+
+        binding.imgBack.setOnClickListener {
+            (requireActivity() as MainActivity).navController.navigateUp()
+        }
+
+        binding.btnRotate.setOnClickListener {
+
+
+            // start media
+            mediaPlayer = MediaPlayer.create(requireContext(), R.raw.wheel_of_fortune);
+            mediaPlayer.start()
+
+
+
+
+            random = (0..5).random()
+            Log.e(TAG, "random: $random")
+            binding.luckyWheel.rotateWheelTo(random)
+            binding.btnRotate.isEnabled = false
+
+            Timer().schedule(object : TimerTask() {
+                override fun run() {
+                    // playMedia
+                    stopMedia()
+                }
+            }, 9000)
+        }
+
+    }
+
+    private fun stopMedia() {
+        try {
+            if (::mediaPlayer.isInitialized)
+                mediaPlayer.stop()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+}
